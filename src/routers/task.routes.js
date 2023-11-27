@@ -3,7 +3,7 @@ import userController from '../controllers/userController';
 import checkUser from '../middleware/checkUser';
 import { validationSignup } from '../validations/signupValidation';
 import { validationLogin } from '../validations/loginValidation';
-import { validationEdit } from '../validations//editValidation';
+import { validationEdit } from '../validations/editValidation';
 
 
 const router = express.Router();

@@ -3,7 +3,6 @@ import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import routes from './routers';
-// const fileUpload = require('express-fileupload');
 
 
 dotenv.config();
