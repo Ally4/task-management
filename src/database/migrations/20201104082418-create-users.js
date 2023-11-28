@@ -14,28 +14,21 @@ module.exports = {
       }, 
       email: {
         type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: 'edit@myEmail.com',
       },
       password: {
         type: Sequelize.STRING,
       },
       address: {
         type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: 'Edit my address!.',
       },
       phoneNumber: {
         type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: 'Edit my number',
       },
       confirmation: {
         type: Sequelize.STRING,
       },
       isLoggedIn: {
         type: Sequelize.BOOLEAN,
-        defaultValue: false
       },
       createdAt: {
         allowNull: false,

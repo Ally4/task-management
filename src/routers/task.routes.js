@@ -1,27 +1,36 @@
 import express from 'express';
-import userController from '../controllers/userController';
+import multer from 'multer';
+import taskController from '../controllers/taskController';
 import checkUser from '../middleware/checkUser';
-import { validationSignup } from '../validations/signupValidation';
-import { validationLogin } from '../validations/loginValidation';
-import { validationEdit } from '../validations/editValidation';
+import { validateTask } from '../validations/taskValidation';
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 
 const router = express.Router();
 
-router.post('/register', 
-validationSignup,
- userController.signup);
+router.post('/create', 
+validateTask,
+upload.single('pdfFile'),
+upload.single('image'),
+ taskController.create);
 
- router.post('/login', 
-validationLogin,
- userController.login);
+ router.get('/tasks', 
+ taskController.getAllTasks);
 
- router.patch('/edit', 
+ router.patch('/task', 
  checkUser,
- validationEdit,
- userController.updateProfile);
+ validateTask,
+ taskController.updateTask);
 
- router.get('/user/:email', 
- userController.viewUser);
+ router.get('/task/:title', 
+ taskController.getTaskByTitle);
+
+ router.delete('/task/:title', 
+ taskController.deleteTask);
+
+ router.patch('/task/:title', 
+ taskController.draftTask);
 
  export default router;

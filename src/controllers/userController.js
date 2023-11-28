@@ -37,7 +37,7 @@ class register {
           .json({ status: 409, message: ('The email is already in the system') });
       }
 
-      const payload = { email, firstName, lastName };
+      const payload = { email};
       const accessToken = encode(payload);
       
       const thePassword = bcrypts.hashSync(password, 10);
@@ -53,6 +53,7 @@ class register {
         address
       });
       const newUserDisplay = {
+        id: newUser.id,
         email: newUser.email,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
@@ -68,8 +69,9 @@ class register {
         user: newUserDisplay
       });
     } catch (error) {
-      return res.status(500).json({ status: 500, 
-        message: error.details[0].message.replace(/"/g, ''),
+      return res.status(500).json({
+        status: 500,
+        message: error,
       });
     }
   }
@@ -96,7 +98,6 @@ class register {
       const payload = { email };
       const accessToken = encode(payload);
 
-      // Update user
       await Users.update({ isLoggedIn: true },
         {where: { email } });
 
@@ -113,7 +114,7 @@ class register {
     } catch (error) {
       return res.status(500).json({
         status: 500,
-        message: error.details[0].message.replace(/"/g, ''),
+        message: error,
       });
     }    
   }
@@ -124,74 +125,39 @@ class register {
       const { email } = req.params;
       const result = await Users.findOne({
         where: { email },
+        attributes: {
+          exclude: ['password'],
+        },
       });
       if (!result) {
         return res.status(400).json({
           status: 400,
-          message: ('No result on that email'),
+          message: ('No user on that email'),
         });
       }
       return res.status(200).json({
         status: 200,
-        message: 'Result fetched successfully',
+        message: 'User fetched successfully',
         data: result,
       });
     } catch (error) {
       return res.status(500).json({
         status: 500,
-        message: error.message,
+        message: error,
       });
     }
   }
 
 
-  // static async editUser(req, res) {
-  //   try {
-  //     const { email } = req.params;
-  //     const result = await Users.findOne(req.body, {
-  //       where: { email },
-  //     });
-  //     if (!result) {
-  //       return res.status(400).json({
-  //         status: 400,
-  //         message: ('No result on that emai'),
-  //       });
-  //     }
-  //     const display = await Users.update(req.body, {
-  //       where: { email },
-  //     });
-  //     console.log("result..................", result)
-  //     return res.status(200).json({
-  //       status: 200,
-  //       message: 'Result updated successfully',
-  //       data: display,
-  //     });
-  //   } catch (err) {
-  //     return res.status(500).send(err.message);
-  //   }
-  // }
-
-
-
   static async updateProfile(req, res) {
     try {
-      const { user } = req.user;
+      const { email } = req.user;
       const updatedField = await Users.update(req.body, {
-        where: { user },
+        where: { email },
         returning: true,
         plain: true,
       });
       const userData = updatedField[1];
-
-      // for cloudinary image upload 
-      const result = await uploadImage(req.file
-        // , {folder:'acubed-profil-pictures'}
-        );
-
-        // await Users.update(
-        //   {profilPicture: result.secure_url},
-        //   {where: { user }},
-        // );
 
       return res.status(200).json({
         status: 200,
@@ -202,17 +168,15 @@ class register {
           email: userData.email,
           address: userData.address,
 
-          // have to up on profilPicture result.secure_url
-          // profilPicture: result.secure_url
-
-
-
         },
       });
     } catch (error) {
-      return res.status(500).send(error.message);
-    }
+      return res.status(500).json({
+        status: 500,
+        message: error,
+    })
   }
+}
 
 }
 

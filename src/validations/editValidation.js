@@ -1,11 +1,11 @@
 import Joi from '@hapi/joi';
 
 export const edit = Joi.object().keys({
-  firstName: Joi.string().min(5).max(15).trim().required(),
-  lastName: Joi.string().min(5).max(15).trim().required(),
-  email: Joi.string().email().trim().required(),
+  firstName: Joi.string().min(5).max(15).trim(),
+  lastName: Joi.string().min(5).max(15).trim(),
+  email: Joi.string().email().trim(),
   address: Joi.string().min(5).max(15).trim(),
-  phoneNumber: Joi.string().min(5).max(15).trim().required(),
+  phoneNumber: Joi.string().min(5).max(15).trim(),
 });
 
 export const validationEdit = (req, res, next) => {

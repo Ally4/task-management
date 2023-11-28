@@ -6,6 +6,9 @@ import cloudinary from '../cloudinary/cloudinary';
 
 dotenv.config();
 
+// mail.setApiKey(process.env.SENDGRID);
+
+
 const { task } = Models;
 
 const uploadPdfToCloudinary = (fileBuffer) => new Promise((resolve, reject) => {
@@ -21,41 +24,79 @@ const uploadPdfToCloudinary = (fileBuffer) => new Promise((resolve, reject) => {
   ).end(fileBuffer);
 });
 
+
+const uploadImage = async (file) => {
+  try {
+    const result = await cloudinary.uploader.upload(file.path, {folder:'acubed-profil-pictures'});
+    return result;
+  } catch (error) {
+    // console.error('error uploading image to cloudinary', error);
+    throw error;
+  }
+}
+
+
+
+
 class Task {
   static async create(req, res) {
     try {
       const {
-        name,
-        email,
-        phoneNumber,
-        address,
-        sickness,
+        title,
+        startDate,
+        endDate,
+        assignee,
+        project,
+        description,
+        priority,
+        pdf,
+        picture
       } = req.body;
 
       const id = uuidv4();
 
 
+
+            const image = await uploadImage(req.file);
+      
+              await Users.update(
+                {profilPicture: result.secure_url},
+                {where: { title }},
+              );
+
+
       const result = await uploadPdfToCloudinary(req.file.buffer);
 
-      await task.create({
+     const display = await task.create({
         id,
-        name,
-        email,
-        phoneNumber,
-        address,
-        sickness,
+        title,
+        startDate,
+        endDate,
+        assignee,
+        project,
+        description,
+        priority,
         pdf: result.secure_url,
+        profilPicture: result.secure_url,
       });
 
-      const displayOrderFromHospital = {
-        name,
-        sickness,
+      const data = {
+        id,
+        title,
+        startDate,
+        endDate,
+        assignee,
+        project,
+        description,
+        priority,
+        pdf: result.secure_url,
+        picture,
       };
 
       return res.status(201).json({
         status: 201,
-        message: res.__('The result was sent successfully'),
-        data: displayOrderFromHospital,
+        message: ('The task has been recorded successfully'),
+        data,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -63,38 +104,32 @@ class Task {
     }
   }
 
-  static async getAlltask(req, res) {
+  static async getAllTasks(req, res) {
     try {
       const alltask = await task.findAll({
-        attributes: {
-          exclude: ['pdf'],
-        },
+        where: {state: ' '}
       });
       if (!alltask) {
         return res.status(404).send('no task found');
       }
       return res.status(200).json({
         status: 200,
-        message: 'task fetched successfully',
+        message: 'tasks fetched successfully',
         data: alltask,
       });
     } catch (error) {
       return res.status(500).json({
         status: 500,
-        message: 'Internal Server Error',
-        err: error.message,
+        message: error,
       });
     }
   }
 
-  static async getResultByPatientId(req, res) {
+  static async getTaskByTitle(req, res) {
     try {
-      const { name } = req.params;
+      const { title } = req.params;
       const result = await task.findOne({
-        where: { name },
-        attributes: {
-          exclude: ['pdf'],
-        },
+        where: { title },
       });
       if (!result) {
         return res.status(404).send('no result on that name');
@@ -104,76 +139,118 @@ class Task {
         message: 'Result fetched successfully',
         data: result,
       });
-    } catch (err) {
-      return res.status(500).send(err.message);
-    }
-  }
-
-  static async updateSomeResultByPatientId(req, res) {
-    try {
-
-
-      const { name } = req.params;
-      const result = await task.update(req.body, {
-        where: { name },
+    } catch (error) {
+      return res.status(500).json({
+        status: 500,
+        message: error,
       });
-      const userData = updatedField[1];
+  }
+}
 
-      if (result) {
-        return res.status(404).send('no result on that name');
+
+
+static async updateTask(req, res) {
+  try {
+    const {
+      title,
+      startDate,
+      endDate,
+      assignee,
+      project,
+      description,
+      priority,
+      pdf,
+      image
+    } = req.body;
+
+
+    const result = await uploadPdfToCloudinary(req.file.buffer);
+
+   const task =  await task.update(req.body,{   
+    where: { title },
+    }
+  );
+
+    const data = {
+      id: task.id,
+      title: task.title,
+      startDate: task.startDate,
+      endDate: task.endDate,
+      assignee: task.assignee,
+      project: task.project,
+      description: task.description,
+      priority: task.priority,
+      pdf: result.secure_url,
+      image: task.image,
+    };
+
+    return res.status(200).json({
+      status: 200,
+      message: ('The task has been recorded successfully'),
+      data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: error,
+    });
+  }
+}
+
+
+
+static async deleteTask(req, res) {
+  try {
+    const { title } = req.params;
+    const task = await task.findOne({
+      where: { title },
+    });
+    if (!task) {
+      return res.status(404).send('no task found');
+    }
+
+    const taskUpdated =  await task.update(task.state= "deleted",{   
+      where: { title },
       }
-      return res.status(204).json({
-        status: 204,
-        message: 'Result updated successfully',
-        data: result,
-      });
-    } catch (err) {
-      return res.status(500).send(err.message);
-    }
+    );
+    return res.status(200).json({
+      status: 200,
+      message: 'tasks deleted successfully',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: error,
+    });
   }
+}
 
-  static async updateResultByPatientId(req, res) {
-    try {
-      const { name } = req.params;
-      const result = await task.findOne({
-        where: { name },
-        attributes: {
-          exclude: ['pdf'],
-        },
-      });
-      if (result) {
-        return res.status(404).send('no result on that name');
-      }
-      return res.status(200).json({
-        status: 200,
-        message: 'Result updated successfully',
-        data: result,
-      });
-    } catch (err) {
-      return res.status(500).send(err.message);
+static async draftTask(req, res) {
+  try {
+    const { title } = req.params;
+    const task = await task.findOne({
+      where: { title },
+    });
+    if (!task) {
+      return res.status(404).send('no task found');
     }
-  }
 
-  static async deleteResultByPatientId(req, res) {
-    try {
-      const { name } = req.params;
-      const result = await task.findOne({
-        where: { name },
-        attributes: {
-          exclude: ['pdf'],
-        },
-      });
-      if (result) {
-        return res.status(404).send('no result on that name');
+    const taskUpdated =  await task.update(task.draft= "drafted",{   
+      where: { title },
       }
-      return res.status(204).json({
-        status: 204,
-        message: 'Result deleted successfully',
-      });
-    } catch (err) {
-      return res.status(500).send(err.message);
-    }
+    );
+    return res.status(200).json({
+      status: 200,
+      message: 'tasks drafted successfully',
+      data: task,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: error,
+    });
   }
+}
 }
 
 export default Task;

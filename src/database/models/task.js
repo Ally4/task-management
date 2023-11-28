@@ -13,16 +13,17 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   task.init({
-    name: DataTypes.STRING,
+    title: DataTypes.STRING,
     assignee: DataTypes.JSON,
-    email: DataTypes.STRING,
     startDate: DataTypes.STRING,
     endDate: DataTypes.STRING,
     priority: DataTypes.STRING,
     description: DataTypes.STRING,
     project: DataTypes.STRING,
-    picture: DataTypes.STRING,
     pdf: DataTypes.STRING,
+    picture: DataTypes.STRING,
+    state: DataTypes.STRING,
+    draft: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'task',
